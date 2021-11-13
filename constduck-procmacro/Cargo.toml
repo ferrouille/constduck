@@ -1,0 +1,16 @@
+[package]
+name = "constduck-procmacro"
+version = "0.1.0"
+edition = "2021"
+authors = ["ferrouille <git@ferrouille.nl>"]
+license = "MPL-2.0"
+repository = "https://github.com/ferrouille/constduck"
+description = "Macro implementation of #[derive(ConstDuck)]"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+syn = { version = "1.0.5", features = ["derive", "printing"] }
+proc-macro2 = "1.0.30"
+quote = "1.0"
