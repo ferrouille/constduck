@@ -1,7 +1,7 @@
 [![crates.io](https://img.shields.io/crates/v/constduck.svg)](https://crates.io/crates/constduck/) [![docs](https://img.shields.io/badge/docs-rs.svg)](https://docs.rs/constduck/)
 
 # `constduck`: compile-time duck typing and reflection
-`constduck` provides a procmacro that can enable compile time duck typing and reflection on arbitrary struct types. It allows you to auto-generate implementations for traits, like `#[derive(..)]`, without needing a procmacro. See [`constduck/examples/debug-print.rs`](constduck/examples/debug-print.rs) for an example. With `constduck`, you can also write generic implementations that work for any struct that has the right fields.
+`constduck` provides a procmacro that can enable compile time duck typing and reflection on arbitrary struct types. With `constduck`, you can write generic implementations that work for any struct with the right fields. It also allows you to auto-generate implementations for traits, like `#[derive(..)]`, without needing a procmacro. See [`constduck/examples/debug-print.rs`](constduck/examples/debug-print.rs) for an example.
 
 # Usage
 Derive `ConstDuck` on a struct:
@@ -27,6 +27,30 @@ fn deduct_money<N, T: Field<"money", Ty = N>>(t: &mut T)
 ```
 
 `deduct_money` will work for any struct that has a field `money` and derives `ConstDuck`.
+
+
+The main use case of `constduck` is in macros where you want to use the type of a field. For example:
+
+```rust
+macro_rules! make_getter {
+    ($struct:ident.$field:ident) => {
+        impl $struct {
+            pub fn $field(&self) -> &/* What to write here? */ {
+                &self.$field
+            }
+        }
+    }
+}
+
+struct Foo {
+    bar: String,
+    baz: u32,
+}
+
+make_getter!(Foo.bar);
+```
+
+In this case the function definition requires a return type, but you don't have enough information to specify the type.
 
 ## (In)stability
 This project requires Rust nightly, and uses the incomplete `adt_const_params` feature. You might encounter ICEs.

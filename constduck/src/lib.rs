@@ -59,6 +59,34 @@
 //! deduct_money(&mut scrooge);
 //! assert_eq!(scrooge.money, 0_999_999_995);
 //! ```
+//!
+//! The main use case for `constduck` is in macros.
+//! You sometimes need to specify a type in a macro.
+//! If you only know the type of the struct, it is normally impossible to obtain the type of a field.
+//! With `constduck`, you can write this type using generics. For example:
+//!
+//! ```rust
+//! # #![feature(adt_const_params)]
+//! # use constduck::*;
+//! macro_rules! make_getter {
+//!     ($struct:ident.$field:ident) => {
+//!         impl<T> $struct
+//!             where Self: Field<{ stringify!($field) }, Ty = T> {
+//!             pub fn $field(&self) -> &T {
+//!                 <Self as Field<{ stringify!($field) }>>::get(self)
+//!             }
+//!         }
+//!     }
+//! }
+//!
+//! #[derive(ConstDuck)]
+//! struct Foo {
+//!     bar: String,
+//!     baz: u32,
+//! }
+//!
+//! make_getter!(Foo.bar);
+//! ```
 
 /// Derives [`Field`] for each field of a struct and [`ConstructFrom`].
 /// `ConstructFrom<T>` is derived for `T`s that implement [`WithField`].
