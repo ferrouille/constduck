@@ -7,6 +7,7 @@ license = "MPL-2.0"
 repository = "https://github.com/ferrouille/constduck"
 description = "Compile-time ducktyping and reflection using const generics"
 readme = "../README.md"
+exclude = ["examples"]
 
 [dependencies]
 constduck-procmacro = { path = "../constduck-procmacro/", version = "0.1" }
