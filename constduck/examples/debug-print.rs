@@ -1,7 +1,9 @@
 #![allow(incomplete_features)]
 #![feature(adt_const_params)]
 
-use constduck::{ConstDuck, ConstDuckGeneric, Field, FieldList, FieldListCons, FieldListNil};
+use constduck::{
+    ConstDuck, ConstDuckGeneric, Field, FieldList, FieldListCons, FieldListNil, Struct,
+};
 use std::fmt;
 
 // Some boring formatting stuff
@@ -53,20 +55,26 @@ impl MyPrint for u32 {
 struct ImplGuard;
 
 // Helper trait for printing fields in a field list
-trait PrintField<O> {
+trait PrintHelper<O> {
     fn print(obj: &O, indent: Indent);
 }
 
-impl<O> PrintField<O> for FieldListNil {
+impl<O> PrintHelper<O> for FieldListNil {
     fn print(_: &O, _: Indent) {}
 }
 
-// `MyPrint` implementation for a field list
-impl<O, const NAME: &'static str, T: FieldList> PrintField<O> for FieldListCons<NAME, T>
+// `MyPrint` implementation for a struct
+impl<O, L: FieldList + PrintHelper<O>> PrintHelper<O> for Struct<L> {
+    fn print(obj: &O, indent: Indent) {
+        L::print(obj, indent);
+    }
+}
+
+impl<O, const NAME: &'static str, T: FieldList> PrintHelper<O> for FieldListCons<NAME, T>
 where
     O: Field<NAME>,
     O::Ty: MyPrint,
-    T: PrintField<O>,
+    T: PrintHelper<O>,
 {
     fn print(obj: &O, indent: Indent) {
         println!("{}Field `{}`", indent, NAME);
@@ -78,12 +86,12 @@ where
 // `MyPrint` implementation for all types that derive `ConstDuck`.
 impl<T: ConstDuckGeneric<ImplGuard>> MyPrint for T
 where
-    <T as ConstDuckGeneric<ImplGuard>>::Fields: PrintField<T>,
+    <T as ConstDuckGeneric<ImplGuard>>::Reflect: PrintHelper<T>,
 {
     fn print(&self, indent: Indent) {
         println!("{}struct `{}`:", indent, T::NAME);
 
-        <T::Fields as PrintField<T>>::print(&self, indent.next())
+        <T::Reflect as PrintHelper<T>>::print(&self, indent.next())
     }
 }
 

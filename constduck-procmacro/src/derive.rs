@@ -60,7 +60,7 @@ pub fn gen(input: &DeriveInput) -> TokenStream {
             .collect::<Vec<_>>();
 
         let mut field_iter = quote::quote! { ::constduck::FieldListNil };
-        for fieldname in fieldnames.iter() {
+        for fieldname in fieldnames.iter().rev() {
             field_iter = quote::quote! {
                 ::constduck::FieldListCons<#fieldname, #field_iter>
             };
@@ -87,6 +87,7 @@ pub fn gen(input: &DeriveInput) -> TokenStream {
             gens.extend([TokenTree::Punct(Punct::new(',', Spacing::Alone))]);
         }
 
+        let field_iter = quote::quote! { ::constduck::Struct<#field_iter> };
         let structname = ident.to_string();
         tokens.extend(quote::quote! {
             impl<#gens #(#gs: Into<#fieldtypes>,)* __D: #(::constduck::WithField<#fieldnames, Output = #gs> +)*> ::constduck::ConstructFrom<__D> for #ident #ty_generics #where_clause {
@@ -102,13 +103,13 @@ pub fn gen(input: &DeriveInput) -> TokenStream {
             #[automatically_derived]
             impl #impl_generics ::constduck::ConstDuck for #ident #ty_generics #where_clause {
                 const NAME: &'static str = #structname;
-                type Fields = #field_iter;
+                type Reflect = #field_iter;
             }
 
             #[automatically_derived]
             impl<#gens __T> ::constduck::ConstDuckGeneric<__T> for #ident #ty_generics #where_clause {
                 const NAME: &'static str = #structname;
-                type Fields = #field_iter;
+                type Reflect = #field_iter;
             }
         });
 

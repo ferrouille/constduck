@@ -1,5 +1,6 @@
 #![allow(incomplete_features)]
 #![feature(adt_const_params)]
+#![feature(inherent_associated_types)]
 
 //! `constduck` implements compile-time duck typing via const generics.
 //! It only works on structs.
@@ -94,9 +95,20 @@
 /// `ConstructFrom<T>` will be implemented for all `T: WithField<"bar"> + WithField<"baz">`.
 pub use constduck_procmacro::ConstDuck;
 
+/// Trait that provides compile-time type info for the type's fields.
 pub trait ConstDuck {
+    /// The name of the type
     const NAME: &'static str;
-    type Fields: FieldList;
+
+    /// The type used for reflection: a [`Struct<L>`](Struct).
+    type Reflect;
+}
+
+/// The reflection type of a normal struct. L is a list of fields in the same order as the definition.
+pub struct Struct<L: FieldList>(L);
+
+impl<L: FieldList> Struct<L> {
+    type Fields = L;
 }
 
 /// Identical to [`ConstDuck`], implemented for all `T`.
@@ -110,7 +122,7 @@ pub trait ConstDuck {
 /// See [Rust's orphan rules](https://github.com/rust-lang/rfcs/blob/master/text/2451-re-rebalancing-coherence.md).
 pub trait ConstDuckGeneric<T> {
     const NAME: &'static str;
-    type Fields: FieldList;
+    type Reflect;
 }
 
 /// A list of fields, available at compile time.
